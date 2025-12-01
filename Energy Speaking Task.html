@@ -1,0 +1,424 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, Pause, ChevronRight, ChevronLeft, Mic, Square, Volume2, Lightbulb, Zap, Flame } from 'lucide-react';
+
+const Card = ({ children, className = "" }) => (
+  <div className={`bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden ${className}`}>
+    {children}
+  </div>
+);
+
+const Button = ({ onClick, disabled, children, variant = 'primary', className = "" }) => {
+  const baseStyle = "px-6 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2";
+  const variants = {
+    primary: "bg-blue-900 text-white hover:bg-blue-800 disabled:opacity-50",
+    secondary: "bg-slate-200 text-slate-800 hover:bg-slate-300 disabled:opacity-50",
+    danger: "bg-red-500 text-white hover:bg-red-600",
+    success: "bg-green-600 text-white hover:bg-green-700"
+  };
+  return (
+    <button 
+      onClick={onClick} 
+      disabled={disabled} 
+      className={`${baseStyle} ${variants[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+// --- Custom Illustrations ---
+
+const LampDiagram = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64 bg-slate-50 rounded-lg border border-slate-200">
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" />
+      </marker>
+    </defs>
+    
+    {/* Table */}
+    <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
+    
+    {/* Cord */}
+    <path d="M10 260 Q 50 260, 150 250" stroke="#334155" strokeWidth="3" fill="none" />
+    <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" /> {/* Plug */}
+    
+    {/* Lamp Base */}
+    <path d="M130 250 L170 250 L160 200 L140 200 Z" fill="#1e3a8a" />
+    <rect x="145" y="100" width="10" height="100" fill="#1e3a8a" />
+    
+    {/* Shade */}
+    <path d="M110 100 L190 100 L210 150 L90 150 Z" fill="#fbbf24" opacity="0.8" />
+    
+    {/* Bulb */}
+    <circle cx="150" cy="130" r="15" fill="#fef08a" />
+    
+    {/* Energy Arrows - Electrical */}
+    <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+    <text x="35" y="230" className="text-xs fill-red-600 font-bold">Electrical</text>
+    
+    {/* Energy Arrows - Light/Heat */}
+    <path d="M170 110 L220 90" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+    <path d="M180 130 L230 140" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+    <text x="235" y="100" className="text-xs fill-red-600 font-bold">Light & Thermal</text>
+  </svg>
+);
+
+const ToasterDiagram = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64 bg-slate-50 rounded-lg border border-slate-200">
+    <defs>
+      <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" />
+      </marker>
+    </defs>
+    
+    {/* Table */}
+    <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
+    
+    {/* Cord */}
+    <path d="M10 260 Q 50 260, 120 250" stroke="#334155" strokeWidth="3" fill="none" />
+    <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" />
+    
+    {/* Toaster Body */}
+    <rect x="120" y="150" width="160" height="100" rx="10" fill="#94a3b8" stroke="#475569" strokeWidth="2" />
+    <rect x="140" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+    <rect x="180" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+    <rect x="220" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+    
+    {/* Coils (Glowing) */}
+    <path d="M130 160 L135 240 M150 160 L155 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
+    <path d="M250 160 L255 240 M265 160 L270 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
+
+    {/* Toast */}
+    <path d="M150 110 L210 110 L205 150 L155 150 Z" fill="#d97706" stroke="#b45309" strokeWidth="2" />
+    
+    {/* Energy Arrows - Electrical */}
+    <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+    <text x="35" y="230" className="text-xs fill-red-600 font-bold">Electrical</text>
+    
+    {/* Energy Arrows - Question Marks */}
+    <path d="M290 180 L340 160" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+    <text x="350" y="160" className="text-xl fill-red-600 font-bold">?</text>
+    
+    <path d="M290 220 L340 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+    <text x="350" y="250" className="text-xl fill-red-600 font-bold">?</text>
+  </svg>
+);
+
+// --- Audio Player Component ---
+
+const AudioPlayer = ({ text, label }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  const speak = () => {
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Try to find a good voice
+    const voices = window.speechSynthesis.getVoices();
+    const femaleVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English'));
+    if (femaleVoice) utterance.voice = femaleVoice;
+    
+    utterance.rate = 0.9;
+    utterance.onend = () => setIsPlaying(false);
+    
+    setIsPlaying(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    return () => window.speechSynthesis.cancel();
+  }, []);
+
+  return (
+    <button 
+      onClick={speak}
+      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+        isPlaying ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+      }`}
+    >
+      {isPlaying ? <Pause size={16} /> : <Volume2 size={16} />}
+      {isPlaying ? 'Listening...' : `Listen to ${label}`}
+    </button>
+  );
+};
+
+// --- Main App Component ---
+
+const App = () => {
+  const [step, setStep] = useState(0);
+  const [notes, setNotes] = useState({ q1: '', q2: '', q3: '' });
+  const [isRecording, setIsRecording] = useState(false);
+  const [timer, setTimer] = useState(0);
+
+  // Script Data
+  const script = {
+    intro: "Now we are going to talk about a science project. Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can transform—that means change—from one form to another.",
+    ninaPrompt: "Nina, explain to me step by step how the energy changes in the desk lamp.",
+    ninaResponse: "I can explain. The lamp needs energy to work. First, electrical energy comes from the outlet and travels through the cord. When the electricity reaches the lightbulb, it transforms. It changes into radiant energy, which is light, so we can read. It also changes into thermal energy, because the lightbulb gets hot.",
+    studentPrompt: "Now it’s your turn. Look at the picture of the toaster. Explain to me step by step how the energy transforms in the toaster. Tell me what form it starts as, and what forms it turns into.",
+  };
+
+  useEffect(() => {
+    let interval;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setTimer(t => t + 1);
+      }, 1000);
+    } else {
+      setTimer(0);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const steps = [
+    // STEP 0: TITLE
+    {
+      title: "Energy Transformation",
+      render: () => (
+        <div className="flex flex-col items-center text-center space-y-8 animate-fadeIn">
+          <div className="bg-blue-900 text-white p-6 rounded-full shadow-xl">
+            <Zap size={64} />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold text-blue-900 mb-4">Speaking Task</h1>
+            <h2 className="text-xl text-slate-600">Science: Energy Forms</h2>
+          </div>
+          <p className="max-w-md text-slate-500">
+            In this activity, you will listen to a teacher and a student, look at diagrams, and then explain how energy works in a toaster.
+          </p>
+          <Button onClick={() => setStep(1)} className="mt-8">
+            Start Activity <ChevronRight size={20} />
+          </Button>
+        </div>
+      )
+    },
+    // STEP 1: CONTEXT
+    {
+      title: "The Classroom",
+      render: () => (
+        <div className="space-y-6">
+          <Card className="p-6 bg-blue-50">
+            <h3 className="text-lg font-bold text-blue-900 mb-2">Introduction</h3>
+            <p className="text-slate-700 leading-relaxed text-lg">
+              Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can <strong>transform</strong> (change) from one form to another.
+            </p>
+            <div className="mt-4">
+               <AudioPlayer text={script.intro} label="Introduction" />
+            </div>
+          </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="bg-white p-4 rounded-lg border border-slate-200 flex items-center gap-4">
+                <div className="bg-yellow-100 p-3 rounded-full"><Zap className="text-yellow-600" /></div>
+                <div>
+                  <h4 className="font-bold">Key Concept</h4>
+                  <p className="text-sm text-slate-600">Energy changes form.</p>
+                </div>
+             </div>
+             <div className="bg-white p-4 rounded-lg border border-slate-200 flex items-center gap-4">
+                <div className="bg-red-100 p-3 rounded-full"><Flame className="text-red-600" /></div>
+                <div>
+                  <h4 className="font-bold">Key Standard</h4>
+                  <p className="text-sm text-slate-600">Energy is not destroyed.</p>
+                </div>
+             </div>
+          </div>
+        </div>
+      )
+    },
+    // STEP 2: MODEL
+    {
+      title: "Model: The Desk Lamp",
+      render: () => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+               <LampDiagram />
+               <p className="text-xs text-center text-slate-400 mt-2">Figure 1: Desk Lamp Energy Flow</p>
+            </div>
+            
+            <div className="space-y-4">
+              <Card className="p-4 bg-slate-50 border-l-4 border-l-blue-900">
+                <p className="font-bold text-blue-900 mb-2">Teacher asks:</p>
+                <p className="text-slate-700 italic">"Nina, explain to me step by step how the energy changes in the desk lamp."</p>
+                <div className="mt-2">
+                    <AudioPlayer text={script.ninaPrompt} label="Teacher" />
+                </div>
+              </Card>
+
+              <Card className="p-4 bg-yellow-50 border-l-4 border-l-yellow-500">
+                <p className="font-bold text-yellow-800 mb-2">Nina answers:</p>
+                <p className="text-slate-700 mb-3">
+                  "I can explain. The lamp needs energy to work. First, <span className="font-bold text-red-600">electrical energy</span> comes from the outlet... When the electricity reaches the lightbulb, it transforms. It changes into <span className="font-bold text-yellow-600">radiant energy</span> (light) and <span className="font-bold text-orange-600">thermal energy</span> (heat)."
+                </p>
+                <AudioPlayer text={script.ninaResponse} label="Nina" />
+              </Card>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    // STEP 3: STUDENT TURN
+    {
+      title: "Your Turn: The Toaster",
+      render: () => (
+        <div className="space-y-6 h-full flex flex-col">
+          <Card className="p-4 bg-blue-50 mb-4">
+             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h3 className="font-bold text-blue-900">Your Task</h3>
+                    <p className="text-sm text-slate-600">Explain how energy transforms in the toaster.</p>
+                </div>
+                <AudioPlayer text={script.studentPrompt} label="Instructions" />
+             </div>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-grow">
+            {/* Visual Column */}
+            <div className="flex flex-col gap-4">
+              <ToasterDiagram />
+              <div className="bg-slate-100 p-4 rounded-lg text-sm text-slate-600">
+                <p className="font-bold mb-2">Guiding Questions:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>What energy goes IN?</li>
+                  <li>How does it change form?</li>
+                  <li>What energy comes OUT?</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Input Column */}
+            <div className="flex flex-col h-full space-y-4">
+              <div className="flex-grow space-y-4">
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">1. What starts the toaster?</span>
+                  <input 
+                    type="text" 
+                    className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 px-3 py-2 border"
+                    placeholder="e.g. Electrical energy..." 
+                    value={notes.q1}
+                    onChange={(e) => setNotes({...notes, q1: e.target.value})}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-bold text-slate-700">2. What forms does it turn into?</span>
+                  <textarea 
+                    className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 px-3 py-2 border h-24"
+                    placeholder="It changes into..." 
+                    value={notes.q2}
+                    onChange={(e) => setNotes({...notes, q2: e.target.value})}
+                  />
+                </label>
+              </div>
+
+              {/* Recording Simulator */}
+              <div className="border-t pt-4">
+                <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-2">Practice Speaking</p>
+                <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <button 
+                    onClick={() => setIsRecording(!isRecording)}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                      isRecording ? 'bg-red-100 text-red-600 ring-2 ring-red-400' : 'bg-red-600 text-white hover:bg-red-700'
+                    }`}
+                  >
+                    {isRecording ? <Square fill="currentColor" size={20} /> : <Mic size={24} />}
+                  </button>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`text-sm font-mono font-bold ${isRecording ? 'text-red-600' : 'text-slate-400'}`}>
+                        {isRecording ? 'RECORDING' : 'READY TO RECORD'}
+                      </span>
+                      <span className="font-mono text-lg">{formatTime(timer)}</span>
+                    </div>
+                    {isRecording && (
+                       <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                         <div className="h-full bg-red-500 animate-pulse w-2/3"></div>
+                       </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )
+    },
+    // STEP 4: CONCLUSION
+    {
+      title: "Great Job!",
+      render: () => (
+        <div className="flex flex-col items-center justify-center text-center space-y-6 py-12">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+            <Lightbulb size={40} />
+          </div>
+          <h2 className="text-3xl font-bold text-slate-800">You're done!</h2>
+          <p className="max-w-md text-slate-600">
+            You have explained how electrical energy transforms into thermal and radiant energy. Remember, energy is never destroyed, it just changes form!
+          </p>
+          <Button onClick={() => {setStep(0); setNotes({q1:'', q2:'', q3:''});}} variant="secondary">
+            Start Over
+          </Button>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800">
+      <div className="max-w-4xl mx-auto bg-white min-h-[600px] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="bg-blue-900 text-white p-6 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center font-bold">
+               {step > 0 ? step : <Zap size={16} />}
+             </div>
+             <h1 className="text-xl font-bold tracking-tight opacity-90">
+               {step > 0 ? steps[step].title : "ACCESS for ELLs"}
+             </h1>
+          </div>
+          <div className="text-sm opacity-75">
+             Page {step + 1} of {steps.length}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-grow p-6 md:p-10 overflow-y-auto">
+          {steps[step].render()}
+        </div>
+
+        {/* Footer Navigation */}
+        {step > 0 && (
+          <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between">
+            <Button 
+              onClick={() => setStep(s => Math.max(0, s - 1))}
+              variant="secondary"
+              disabled={step === 0}
+            >
+              <ChevronLeft size={20} /> Back
+            </Button>
+            
+            {step < steps.length - 1 && (
+              <Button onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))}>
+                Next <ChevronRight size={20} />
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default App;
