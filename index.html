@@ -3,442 +3,1099 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Energy Transformation Speaking Task</title>
-    
-    <!-- 1. Load Tailwind CSS (Styling) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 2. Load React and Babel (For running the code) -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- 3. Load Lucide Icons (Icons) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Energy Transformation Task</title>
+    <style>
+        /* --- OFFLINE CSS (Replaces Tailwind) --- */
+        :root {
+            --primary: #1e3a8a; /* Blue 900 */
+            --primary-light: #2563eb;
+            --secondary: #e2e8f0; /* Slate 200 */
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-page: #f1f5f9;
+            --bg-card: #ffffff;
+            --danger: #ef4444;
+            --success: #16a34a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-badge {
+            background: rgba(255,255,255,0.2);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Content Areas */
+        .step-content {
+            display: none; /* Hidden by default */
+            padding: 40px;
+            flex-grow: 1;
+            overflow-y: auto;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Components */
+        .card {
+            background: #f8fafc;
+            border: 2px solid var(--secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background-color: #1e40af; }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--text-dark);
+        }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+
+        .btn-listen {
+            background-color: #eff6ff;
+            color: var(--primary-light);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        .btn-listen:hover { background-color: #dbeafe; }
+        .btn-listen.playing { background-color: #fef3c7; color: #92400e; }
+
+        /* Diagrams */
+        svg { display: block; width: 100%; height: auto; max-height: 300px; }
+        .diagram-box {
+            background: #fff;
+            border: 1px solid var(--secondary);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        /* Form Inputs */
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 8px;
+            box-sizing: border-box; /* Fix padding issues */
+        }
+        input:focus, textarea:focus {
+            outline: 2px solid var(--primary-light);
+            border-color: transparent;
+        }
+
+        /* Recording Area */
+        .recording-area {
+            margin-top: 20px;
+            border-top: 1px solid var(--secondary);
+            padding-top: 20px;
+        }
+        .rec-box {
+            background: #f8fafc;
+            border: 1px solid var(--secondary);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .rec-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--danger);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rec-btn.recording {
+            background: #fee2e2;
+            color: var(--danger);
+            box-shadow: 0 0 0 4px #fee2e2;
+        }
+        .rec-status {
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .rec-timer {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Layout Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--secondary);
+            background: #f8fafc;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Utility */
+        .text-center { text-align: center; }
+        .flex-col { display: flex; flex-direction: column; align-items: center; }
+        .mb-4 { margin-bottom: 1rem; }
+        .highlight-red { color: #dc2626; font-weight: bold; }
+        .highlight-yellow { color: #d97706; font-weight: bold; }
+        .highlight-blue { color: #2563eb; font-weight: bold; }
+
+    </style>
 </head>
-<body class="bg-slate-100">
+<body>
 
-    <!-- The App mounts here -->
-    <div id="root"></div>
+<div class="container">
+    <header>
+        <div class="header-title">
+            <div class="step-badge" id="step-badge-icon">⚡</div>
+            <span id="header-text">Energy Transformation</span>
+        </div>
+        <div style="opacity: 0.8; font-size: 0.9rem;">
+            Page <span id="page-num">1</span> of 5
+        </div>
+    </header>
 
-    <!-- The Application Logic -->
-    <script type="text/babel">
-        // Access React functions globally
-        const { useState, useEffect } = React;
-
-        // --- Icon Components (Manually mapping Lucide icons for standalone version) ---
-        // In a normal app we import these, but here we create simple wrappers using the global 'lucide' library
-        const Icon = ({ name, size = 24, className = "", ...props }) => {
-            useEffect(() => {
-                lucide.createIcons();
-            }, [name]);
-            return <i data-lucide={name} width={size} height={size} className={className} {...props}></i>;
-        };
-
-        const Play = (props) => <Icon name="play" {...props} />;
-        const Pause = (props) => <Icon name="pause" {...props} />;
-        const ChevronRight = (props) => <Icon name="chevron-right" {...props} />;
-        const ChevronLeft = (props) => <Icon name="chevron-left" {...props} />;
-        const Mic = (props) => <Icon name="mic" {...props} />;
-        const Square = (props) => <Icon name="square" {...props} />;
-        const Volume2 = (props) => <Icon name="volume-2" {...props} />;
-        const Lightbulb = (props) => <Icon name="lightbulb" {...props} />;
-        const Zap = (props) => <Icon name="zap" {...props} />;
-        const Flame = (props) => <Icon name="flame" {...props} />;
-
-        // --- Components ---
-
-        const Card = ({ children, className = "" }) => (
-            <div className={`bg-white rounded-xl shadow-lg border-2 border-slate-200 overflow-hidden ${className}`}>
-                {children}
+    <!-- STEP 0: TITLE -->
+    <div id="step-0" class="step-content active">
+        <div class="flex-col" style="padding-top: 40px;">
+            <div style="background: var(--primary); color: white; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
             </div>
-        );
+            <h1 style="color: var(--primary); margin-bottom: 10px; font-size: 2.5rem;">Speaking Task</h1>
+            <h2 style="color: var(--text-light); margin-top: 0;">Science: Energy Forms</h2>
+            <p style="max-width: 400px; text-align: center; color: var(--text-light); line-height: 1.6;">
+                In this activity, you will listen to a teacher and a student, look at diagrams, and then explain how energy works in a toaster.
+            </p>
+            <br>
+            <button class="btn btn-primary" onclick="goToStep(1)">
+                Start Activity &rarr;
+            </button>
+        </div>
+    </div>
 
-        const Button = ({ onClick, disabled, children, variant = 'primary', className = "" }) => {
-            const baseStyle = "px-6 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer";
-            const variants = {
-                primary: "bg-blue-900 text-white hover:bg-blue-800 disabled:opacity-50",
-                secondary: "bg-slate-200 text-slate-800 hover:bg-slate-300 disabled:opacity-50",
-                danger: "bg-red-500 text-white hover:bg-red-600",
-                success: "bg-green-600 text-white hover:bg-green-700"
-            };
-            return (
-                <button 
-                onClick={onClick} 
-                disabled={disabled} 
-                className={`${baseStyle} ${variants[variant]} ${className}`}
-                >
-                {children}
-                </button>
-            );
-        };
+    <!-- STEP 1: CONTEXT -->
+    <div id="step-1" class="step-content">
+        <div class="card" style="background: #eff6ff; border-color: #bfdbfe;">
+            <h3 class="highlight-blue">Introduction</h3>
+            <p style="line-height: 1.6;">
+                Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can <strong>transform</strong> (change) from one form to another.
+            </p>
+            <button class="btn btn-listen" onclick="speak('Now we are going to talk about a science project. Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can transform—that means change—from one form to another.')">
+                🔊 Listen to Introduction
+            </button>
+        </div>
 
-        // --- Custom Illustrations ---
-
-        const LampDiagram = () => (
-        <svg viewBox="0 0 400 300" className="w-full h-64 bg-slate-50 rounded-lg border border-slate-200">
-            <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" />
-            </marker>
-            </defs>
-            <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
-            <path d="M10 260 Q 50 260, 150 250" stroke="#334155" strokeWidth="3" fill="none" />
-            <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" />
-            <path d="M130 250 L170 250 L160 200 L140 200 Z" fill="#1e3a8a" />
-            <rect x="145" y="100" width="10" height="100" fill="#1e3a8a" />
-            <path d="M110 100 L190 100 L210 150 L90 150 Z" fill="#fbbf24" opacity="0.8" />
-            <circle cx="150" cy="130" r="15" fill="#fef08a" />
-            <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
-            <text x="35" y="230" className="text-xs fill-red-600 font-bold" style={{fontFamily: 'sans-serif'}}>Electrical</text>
-            <path d="M170 110 L220 90" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
-            <path d="M180 130 L230 140" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
-            <text x="235" y="100" className="text-xs fill-red-600 font-bold" style={{fontFamily: 'sans-serif'}}>Light & Thermal</text>
-        </svg>
-        );
-
-        const ToasterDiagram = () => (
-        <svg viewBox="0 0 400 300" className="w-full h-64 bg-slate-50 rounded-lg border border-slate-200">
-            <defs>
-            <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" />
-            </marker>
-            </defs>
-            <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
-            <path d="M10 260 Q 50 260, 120 250" stroke="#334155" strokeWidth="3" fill="none" />
-            <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" />
-            <rect x="120" y="150" width="160" height="100" rx="10" fill="#94a3b8" stroke="#475569" strokeWidth="2" />
-            <rect x="140" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
-            <rect x="180" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
-            <rect x="220" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
-            <path d="M130 160 L135 240 M150 160 L155 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
-            <path d="M250 160 L255 240 M265 160 L270 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
-            <path d="M150 110 L210 110 L205 150 L155 150 Z" fill="#d97706" stroke="#b45309" strokeWidth="2" />
-            <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
-            <text x="35" y="230" className="text-xs fill-red-600 font-bold" style={{fontFamily: 'sans-serif'}}>Electrical</text>
-            <path d="M290 180 L340 160" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
-            <text x="350" y="160" className="text-xl fill-red-600 font-bold" style={{fontFamily: 'sans-serif'}}>?</text>
-            <path d="M290 220 L340 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
-            <text x="350" y="250" className="text-xl fill-red-600 font-bold" style={{fontFamily: 'sans-serif'}}>?</text>
-        </svg>
-        );
-
-        // --- Audio Player ---
-
-        const AudioPlayer = ({ text, label }) => {
-            const [isPlaying, setIsPlaying] = useState(false);
-            
-            const speak = () => {
-                if (isPlaying) {
-                window.speechSynthesis.cancel();
-                setIsPlaying(false);
-                return;
-                }
-                
-                const utterance = new SpeechSynthesisUtterance(text);
-                const voices = window.speechSynthesis.getVoices();
-                const femaleVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English'));
-                if (femaleVoice) utterance.voice = femaleVoice;
-                
-                utterance.rate = 0.9;
-                utterance.onend = () => setIsPlaying(false);
-                
-                setIsPlaying(true);
-                window.speechSynthesis.speak(utterance);
-            };
-
-            useEffect(() => {
-                return () => window.speechSynthesis.cancel();
-            }, []);
-
-            return (
-                <button 
-                onClick={speak}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    isPlaying ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                }`}
-                >
-                {isPlaying ? <Pause size={16} /> : <Volume2 size={16} />}
-                {isPlaying ? 'Listening...' : `Listen to ${label}`}
-                </button>
-            );
-        };
-
-        // --- Main App Logic ---
-
-        const App = () => {
-        const [step, setStep] = useState(0);
-        const [notes, setNotes] = useState({ q1: '', q2: '', q3: '' });
-        const [isRecording, setIsRecording] = useState(false);
-        const [timer, setTimer] = useState(0);
-
-        const script = {
-            intro: "Now we are going to talk about a science project. Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can transform—that means change—from one form to another.",
-            ninaPrompt: "Nina, explain to me step by step how the energy changes in the desk lamp.",
-            ninaResponse: "I can explain. The lamp needs energy to work. First, electrical energy comes from the outlet and travels through the cord. When the electricity reaches the lightbulb, it transforms. It changes into radiant energy, which is light, so we can read. It also changes into thermal energy, because the lightbulb gets hot.",
-            studentPrompt: "Now it’s your turn. Look at the picture of the toaster. Explain to me step by step how the energy transforms in the toaster. Tell me what form it starts as, and what forms it turns into.",
-        };
-
-        useEffect(() => {
-            let interval;
-            if (isRecording) {
-            interval = setInterval(() => {
-                setTimer(t => t + 1);
-            }, 1000);
-            } else {
-            setTimer(0);
-            }
-            return () => clearInterval(interval);
-        }, [isRecording]);
-
-        const formatTime = (seconds) => {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        };
-
-        const steps = [
-            // STEP 0: TITLE
-            {
-            title: "Energy Transformation",
-            render: () => (
-                <div className="flex flex-col items-center text-center space-y-8 animate-fadeIn">
-                <div className="bg-blue-900 text-white p-6 rounded-full shadow-xl">
-                    <Zap size={64} />
-                </div>
+        <div class="grid-2">
+            <div class="card" style="display:flex; align-items:center; gap:15px;">
+                <div style="background:#fef9c3; padding:10px; border-radius:50%;">⚡</div>
                 <div>
-                    <h1 className="text-4xl font-bold text-blue-900 mb-4">Speaking Task</h1>
-                    <h2 className="text-xl text-slate-600">Science: Energy Forms</h2>
+                    <strong>Key Concept</strong><br>
+                    <span style="font-size:0.9rem; color: var(--text-light);">Energy changes form.</span>
                 </div>
-                <p className="max-w-md text-slate-500">
-                    In this activity, you will listen to a teacher and a student, look at diagrams, and then explain how energy works in a toaster.
-                </p>
-                <Button onClick={() => setStep(1)} className="mt-8">
-                    Start Activity <ChevronRight size={20} />
-                </Button>
+            </div>
+            <div class="card" style="display:flex; align-items:center; gap:15px;">
+                <div style="background:#fee2e2; padding:10px; border-radius:50%;">🔥</div>
+                <div>
+                    <strong>Key Standard</strong><br>
+                    <span style="font-size:0.9rem; color: var(--text-light);">Energy is not destroyed.</span>
                 </div>
-            )
-            },
-            // STEP 1: CONTEXT
-            {
-            title: "The Classroom",
-            render: () => (
-                <div className="space-y-6">
-                <Card className="p-6 bg-blue-50">
-                    <h3 className="text-lg font-bold text-blue-900 mb-2">Introduction</h3>
-                    <p className="text-slate-700 leading-relaxed text-lg">
-                    Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can <strong>transform</strong> (change) from one form to another.
-                    </p>
-                    <div className="mt-4">
-                    <AudioPlayer text={script.intro} label="Introduction" />
-                    </div>
-                </Card>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-lg border border-slate-200 flex items-center gap-4">
-                        <div className="bg-yellow-100 p-3 rounded-full"><Zap className="text-yellow-600" /></div>
-                        <div>
-                        <h4 className="font-bold">Key Concept</h4>
-                        <p className="text-sm text-slate-600">Energy changes form.</p>
-                        </div>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg border border-slate-200 flex items-center gap-4">
-                        <div className="bg-red-100 p-3 rounded-full"><Flame className="text-red-600" /></div>
-                        <div>
-                        <h4 className="font-bold">Key Standard</h4>
-                        <p className="text-sm text-slate-600">Energy is not destroyed.</p>
-                        </div>
-                    </div>
-                </div>
-                </div>
-            )
-            },
-            // STEP 2: MODEL
-            {
-            title: "Model: The Desk Lamp",
-            render: () => (
-                <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                    <LampDiagram />
-                    <p className="text-xs text-center text-slate-400 mt-2">Figure 1: Desk Lamp Energy Flow</p>
-                    </div>
-                    
-                    <div className="space-y-4">
-                    <Card className="p-4 bg-slate-50 border-l-4 border-l-blue-900">
-                        <p className="font-bold text-blue-900 mb-2">Teacher asks:</p>
-                        <p className="text-slate-700 italic">"Nina, explain to me step by step how the energy changes in the desk lamp."</p>
-                        <div className="mt-2">
-                            <AudioPlayer text={script.ninaPrompt} label="Teacher" />
-                        </div>
-                    </Card>
+            </div>
+        </div>
+    </div>
 
-                    <Card className="p-4 bg-yellow-50 border-l-4 border-l-yellow-500">
-                        <p className="font-bold text-yellow-800 mb-2">Nina answers:</p>
-                        <p className="text-slate-700 mb-3">
-                        "I can explain. The lamp needs energy to work. First, <span className="font-bold text-red-600">electrical energy</span> comes from the outlet... When the electricity reaches the lightbulb, it transforms. It changes into <span className="font-bold text-yellow-600">radiant energy</span> (light) and <span className="font-bold text-orange-600">thermal energy</span> (heat)."
-                        </p>
-                        <AudioPlayer text={script.ninaResponse} label="Nina" />
-                    </Card>
-                    </div>
-                </div>
-                </div>
-            )
-            },
-            // STEP 3: STUDENT TURN
-            {
-            title: "Your Turn: The Toaster",
-            render: () => (
-                <div className="space-y-6 h-full flex flex-col">
-                <Card className="p-4 bg-blue-50 mb-4">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <h3 className="font-bold text-blue-900">Your Task</h3>
-                            <p className="text-sm text-slate-600">Explain how energy transforms in the toaster.</p>
-                        </div>
-                        <AudioPlayer text={script.studentPrompt} label="Instructions" />
-                    </div>
-                </Card>
+    <!-- STEP 2: MODEL -->
+    <div id="step-2" class="step-content">
+        <div class="grid-2">
+            <div class="diagram-box">
+                <!-- Lamp SVG -->
+                <svg viewBox="0 0 400 300">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" /></marker>
+                    </defs>
+                    <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
+                    <path d="M10 260 Q 50 260, 150 250" stroke="#334155" strokeWidth="3" fill="none" />
+                    <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" />
+                    <path d="M130 250 L170 250 L160 200 L140 200 Z" fill="#1e3a8a" />
+                    <rect x="145" y="100" width="10" height="100" fill="#1e3a8a" />
+                    <path d="M110 100 L190 100 L210 150 L90 150 Z" fill="#fbbf24" opacity="0.8" />
+                    <circle cx="150" cy="130" r="15" fill="#fef08a" />
+                    <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                    <text x="35" y="230" fill="#dc2626" font-size="12" font-weight="bold">Electrical</text>
+                    <path d="M170 110 L220 90" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                    <path d="M180 130 L230 140" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                    <text x="235" y="100" fill="#dc2626" font-size="12" font-weight="bold">Light & Heat</text>
+                </svg>
+                <p class="text-center" style="font-size:0.8rem; color:var(--text-light); margin-top:5px;">Figure 1: Desk Lamp</p>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-grow">
-                    {/* Visual Column */}
-                    <div className="flex flex-col gap-4">
-                    <ToasterDiagram />
-                    <div className="bg-slate-100 p-4 rounded-lg text-sm text-slate-600">
-                        <p className="font-bold mb-2">Guiding Questions:</p>
-                        <ul className="list-disc list-inside space-y-1">
+            <div>
+                <div class="card" style="border-left: 4px solid var(--primary);">
+                    <p class="highlight-blue">Teacher asks:</p>
+                    <p style="font-style: italic; color: var(--text-light);">"Nina, explain to me step by step how the energy changes in the desk lamp."</p>
+                    <button class="btn btn-listen" onclick="speak('Nina, explain to me step by step how the energy changes in the desk lamp.')">🔊 Listen</button>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #d97706; background: #fffbeb;">
+                    <p class="highlight-yellow">Nina answers:</p>
+                    <p style="font-size:0.95rem;">"First, <span class="highlight-red">electrical energy</span> comes from the outlet... It changes into <span class="highlight-yellow">radiant energy</span> (light) and <span class="highlight-red">thermal energy</span> (heat)."</p>
+                    <button class="btn btn-listen" onclick="speak('I can explain. The lamp needs energy to work. First, electrical energy comes from the outlet and travels through the cord. When the electricity reaches the lightbulb, it transforms. It changes into radiant energy, which is light, so we can read. It also changes into thermal energy, because the lightbulb gets hot.')">🔊 Listen to Nina</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: STUDENT TURN -->
+    <div id="step-3" class="step-content">
+        <div class="card" style="background:#eff6ff; border-color:#bfdbfe; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+                <strong class="highlight-blue">Your Task</strong>
+                <div style="font-size:0.9rem;">Explain how energy transforms in the toaster.</div>
+            </div>
+            <button class="btn btn-listen" onclick="speak('Now it’s your turn. Look at the picture of the toaster. Explain to me step by step how the energy transforms in the toaster. Tell me what form it starts as, and what forms it turns into.')">🔊 Listen to Instructions</button>
+        </div>
+
+        <div class="grid-2">
+            <div>
+                <div class="diagram-box">
+                    <!-- Toaster SVG -->
+                    <svg viewBox="0 0 400 300">
+                        <defs><marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" /></marker></defs>
+                        <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
+                        <path d="M10 260 Q 50 260, 120 250" stroke="#334155" strokeWidth="3" fill="none" />
+                        <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" />
+                        <rect x="120" y="150" width="160" height="100" rx="10" fill="#94a3b8" stroke="#475569" strokeWidth="2" />
+                        <rect x="140" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+                        <rect x="180" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+                        <rect x="220" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+                        <path d="M130 160 L135 240 M150 160 L155 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
+                        <path d="M250 160 L255 240 M265 160 L270 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
+                        <path d="M150 110 L210 110 L205 150 L155 150 Z" fill="#d97706" stroke="#b45309" strokeWidth="2" />
+                        <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+                        <text x="35" y="230" fill="#dc2626" font-size="12" font-weight="bold">Electrical</text>
+                        <path d="M290 180 L340 160" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+                        <text x="350" y="160" fill="#dc2626" font-size="18" font-weight="bold">?</text>
+                        <path d="M290 220 L340 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+                        <text x="350" y="250" fill="#dc2626" font-size="18" font-weight="bold">?</text>
+                    </svg>
+                </div>
+                <div class="card" style="margin-top:10px; background:#f1f5f9;">
+                    <strong>Guiding Questions:</strong>
+                    <ul style="margin:5px 0 0 20px; font-size:0.9rem;">
                         <li>What energy goes IN?</li>
                         <li>How does it change form?</li>
                         <li>What energy comes OUT?</li>
-                        </ul>
-                    </div>
-                    </div>
+                    </ul>
+                </div>
+            </div>
 
-                    {/* Input Column */}
-                    <div className="flex flex-col h-full space-y-4">
-                    <div className="flex-grow space-y-4">
-                        <label className="block">
-                        <span className="text-sm font-bold text-slate-700">1. What starts the toaster?</span>
-                        <input 
-                            type="text" 
-                            className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 px-3 py-2 border"
-                            placeholder="e.g. Electrical energy..." 
-                            value={notes.q1}
-                            onChange={(e) => setNotes({...notes, q1: e.target.value})}
-                        />
-                        </label>
-                        <label className="block">
-                        <span className="text-sm font-bold text-slate-700">2. What forms does it turn into?</span>
-                        <textarea 
-                            className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 px-3 py-2 border h-24"
-                            placeholder="It changes into..." 
-                            value={notes.q2}
-                            onChange={(e) => setNotes({...notes, q2: e.target.value})}
-                        />
-                        </label>
-                    </div>
+            <div>
+                <label style="font-size:0.9rem; font-weight:bold;">1. What starts the toaster?</label>
+                <input type="text" placeholder="e.g. Electrical energy...">
+                
+                <br><br>
 
-                    {/* Recording Simulator */}
-                    <div className="border-t pt-4">
-                        <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-2">Practice Speaking</p>
-                        <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <button 
-                            onClick={() => setIsRecording(!isRecording)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                            isRecording ? 'bg-red-100 text-red-600 ring-2 ring-red-400' : 'bg-red-600 text-white hover:bg-red-700'
-                            }`}
-                        >
-                            {isRecording ? <Square size={20} /> : <Mic size={24} />}
+                <label style="font-size:0.9rem; font-weight:bold;">2. What forms does it turn into?</label>
+                <textarea rows="3" placeholder="It changes into..."></textarea>
+
+                <div class="recording-area">
+                    <div style="font-size:0.8rem; font-weight:bold; color:var(--text-light); text-transform:uppercase; margin-bottom:5px;">Practice Speaking</div>
+                    <div class="rec-box">
+                        <button class="rec-btn" id="record-btn" onclick="toggleRecord()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
                         </button>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-1">
-                            <span className={`text-sm font-mono font-bold ${isRecording ? 'text-red-600' : 'text-slate-400'}`}>
-                                {isRecording ? 'RECORDING' : 'READY TO RECORD'}
-                            </span>
-                            <span className="font-mono text-lg">{formatTime(timer)}</span>
-                            </div>
-                            {isRecording && (
-                            <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                                <div className="h-full bg-red-500 animate-pulse w-2/3"></div>
-                            </div>
-                            )}
-                        </div>
+                        <div>
+                            <div class="rec-status" id="rec-status">READY TO RECORD</div>
+                            <div class="rec-timer" id="rec-timer">0:00</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    </div>
-                </div>
-                </div>
-            )
-            },
-            // STEP 4: CONCLUSION
-            {
-            title: "Great Job!",
-            render: () => (
-                <div className="flex flex-col items-center justify-center text-center space-y-6 py-12">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                    <Lightbulb size={40} />
-                </div>
-                <h2 className="text-3xl font-bold text-slate-800">You're done!</h2>
-                <p className="max-w-md text-slate-600">
-                    You have explained how electrical energy transforms into thermal and radiant energy. Remember, energy is never destroyed, it just changes form!
-                </p>
-                <Button onClick={() => {setStep(0); setNotes({q1:'', q2:'', q3:''});}} variant="secondary">
-                    Start Over
-                </Button>
-                </div>
-            )
+    <!-- STEP 4: DONE -->
+    <div id="step-4" class="step-content">
+        <div class="flex-col" style="padding-top:40px;">
+            <div style="background:#dcfce7; color:#16a34a; padding:20px; border-radius:50%; margin-bottom:20px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h1>Great Job!</h1>
+            <p class="text-center" style="max-width:400px; color:var(--text-light);">
+                You have explained how electrical energy transforms into thermal and radiant energy. Remember, energy is never destroyed, it just changes form!
+            </p>
+            <br>
+            <button class="btn btn-secondary" onclick="goToStep(0)">Start Over</button>
+        </div>
+    </div>
+
+    <footer id="footer-nav">
+        <button class="btn btn-secondary" id="btn-back" onclick="changeStep(-1)" disabled>&larr; Back</button>
+        <button class="btn btn-primary" id="btn-next" onclick="changeStep(1)">Next &rarr;</button>
+    </footer>
+</div>
+
+<script>
+    // --- VANILLA JAVASCRIPT LOGIC ---
+    let currentStep = 0;
+    const totalSteps = 5; // 0 to 4
+    const titles = ["Energy Task", "The Classroom", "The Model", "Your Turn", "Complete"];
+
+    function goToStep(stepIndex) {
+        currentStep = stepIndex;
+        updateUI();
+    }
+
+    function changeStep(delta) {
+        const newStep = currentStep + delta;
+        if (newStep >= 0 && newStep < totalSteps) {
+            currentStep = newStep;
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        // 1. Hide all steps
+        document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+        
+        // 2. Show current step
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+
+        // 3. Update Header
+        document.getElementById('header-text').innerText = titles[currentStep];
+        document.getElementById('page-num').innerText = currentStep + 1;
+        document.getElementById('step-badge-icon').innerText = currentStep === 0 ? '⚡' : currentStep;
+
+        // 4. Update Footer Buttons
+        const backBtn = document.getElementById('btn-back');
+        const nextBtn = document.getElementById('btn-next');
+        const footer = document.getElementById('footer-nav');
+
+        if (currentStep === 0 || currentStep === 4) {
+            footer.style.display = 'none'; // Hide nav on start/end screens
+        } else {
+            footer.style.display = 'flex';
+            backBtn.disabled = (currentStep <= 1); // Disable back on first content page
+            
+            // Logic to disable Next on final page if needed, but we loop to end screen
+            if (currentStep === 3) {
+                nextBtn.innerHTML = 'Finish &rarr;';
+            } else {
+                nextBtn.innerHTML = 'Next &rarr;';
             }
-        ];
+        }
+    }
 
-        return (
-            <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800">
-            <div className="max-w-4xl mx-auto bg-white min-h-[600px] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                {/* Header */}
-                <div className="bg-blue-900 text-white p-6 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center font-bold">
-                    {step > 0 ? step : <Zap size={16} />}
+    // --- Audio Logic ---
+    let isSpeaking = false;
+    function speak(text) {
+        window.speechSynthesis.cancel(); // Stop previous
+        if (isSpeaking) {
+            isSpeaking = false;
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        // Try to get a female voice
+        const voices = window.speechSynthesis.getVoices();
+        const voice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English'));
+        if (voice) utterance.voice = voice;
+        utterance.rate = 0.9;
+        
+        utterance.onend = () => { isSpeaking = false; };
+        isSpeaking = true;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // --- Recording Timer Logic ---
+    let isRecording = false;
+    let timerInterval;
+    let seconds = 0;
+
+    function toggleRecord() {
+        const btn = document.getElementById('record-btn');
+        const status = document.getElementById('rec-status');
+        
+        if (!isRecording) {
+            // Start
+            isRecording = true;
+            btn.classList.add('recording');
+            // Change icon to square (stop)
+            btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></svg>';
+            status.innerText = "RECORDING...";
+            status.style.color = "#ef4444";
+            
+            timerInterval = setInterval(() => {
+                seconds++;
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                document.getElementById('rec-timer').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+
+        } else {
+            // Stop
+            isRecording = false;
+            clearInterval(timerInterval);
+            seconds = 0;
+            document.getElementById('rec-timer').innerText = "0:00";
+            
+            btn.classList.remove('recording');
+            // Change icon back to mic
+            btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+            status.innerText = "READY TO RECORD";
+            status.style.color = "#94a3b8";
+        }
+    }
+
+    // Initialize
+    updateUI();
+
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Transformation Task</title>
+    <style>
+        /* --- OFFLINE CSS (Replaces Tailwind) --- */
+        :root {
+            --primary: #1e3a8a; /* Blue 900 */
+            --primary-light: #2563eb;
+            --secondary: #e2e8f0; /* Slate 200 */
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-page: #f1f5f9;
+            --bg-card: #ffffff;
+            --danger: #ef4444;
+            --success: #16a34a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-badge {
+            background: rgba(255,255,255,0.2);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Content Areas */
+        .step-content {
+            display: none; /* Hidden by default */
+            padding: 40px;
+            flex-grow: 1;
+            overflow-y: auto;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Components */
+        .card {
+            background: #f8fafc;
+            border: 2px solid var(--secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background-color: #1e40af; }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--text-dark);
+        }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+
+        .btn-listen {
+            background-color: #eff6ff;
+            color: var(--primary-light);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        .btn-listen:hover { background-color: #dbeafe; }
+        .btn-listen.playing { background-color: #fef3c7; color: #92400e; }
+
+        /* Diagrams */
+        svg { display: block; width: 100%; height: auto; max-height: 300px; }
+        .diagram-box {
+            background: #fff;
+            border: 1px solid var(--secondary);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        /* Form Inputs */
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 8px;
+            box-sizing: border-box; /* Fix padding issues */
+        }
+        input:focus, textarea:focus {
+            outline: 2px solid var(--primary-light);
+            border-color: transparent;
+        }
+
+        /* Recording Area */
+        .recording-area {
+            margin-top: 20px;
+            border-top: 1px solid var(--secondary);
+            padding-top: 20px;
+        }
+        .rec-box {
+            background: #f8fafc;
+            border: 1px solid var(--secondary);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .rec-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--danger);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rec-btn.recording {
+            background: #fee2e2;
+            color: var(--danger);
+            box-shadow: 0 0 0 4px #fee2e2;
+        }
+        .rec-status {
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .rec-timer {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Layout Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--secondary);
+            background: #f8fafc;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Utility */
+        .text-center { text-align: center; }
+        .flex-col { display: flex; flex-direction: column; align-items: center; }
+        .mb-4 { margin-bottom: 1rem; }
+        .highlight-red { color: #dc2626; font-weight: bold; }
+        .highlight-yellow { color: #d97706; font-weight: bold; }
+        .highlight-blue { color: #2563eb; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-title">
+            <div class="step-badge" id="step-badge-icon">⚡</div>
+            <span id="header-text">Energy Transformation</span>
+        </div>
+        <div style="opacity: 0.8; font-size: 0.9rem;">
+            Page <span id="page-num">1</span> of 5
+        </div>
+    </header>
+
+    <!-- STEP 0: TITLE -->
+    <div id="step-0" class="step-content active">
+        <div class="flex-col" style="padding-top: 40px;">
+            <div style="background: var(--primary); color: white; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+            </div>
+            <h1 style="color: var(--primary); margin-bottom: 10px; font-size: 2.5rem;">Speaking Task</h1>
+            <h2 style="color: var(--text-light); margin-top: 0;">Science: Energy Forms</h2>
+            <p style="max-width: 400px; text-align: center; color: var(--text-light); line-height: 1.6;">
+                In this activity, you will listen to a teacher and a student, look at diagrams, and then explain how energy works in a toaster.
+            </p>
+            <br>
+            <button class="btn btn-primary" onclick="goToStep(1)">
+                Start Activity &rarr;
+            </button>
+        </div>
+    </div>
+
+    <!-- STEP 1: CONTEXT -->
+    <div id="step-1" class="step-content">
+        <div class="card" style="background: #eff6ff; border-color: #bfdbfe;">
+            <h3 class="highlight-blue">Introduction</h3>
+            <p style="line-height: 1.6;">
+                Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can <strong>transform</strong> (change) from one form to another.
+            </p>
+            <button class="btn btn-listen" onclick="speak('Now we are going to talk about a science project. Mrs. Green’s class is learning about energy. They are learning that energy cannot be created or destroyed, but it can transform—that means change—from one form to another.')">
+                🔊 Listen to Introduction
+            </button>
+        </div>
+
+        <div class="grid-2">
+            <div class="card" style="display:flex; align-items:center; gap:15px;">
+                <div style="background:#fef9c3; padding:10px; border-radius:50%;">⚡</div>
+                <div>
+                    <strong>Key Concept</strong><br>
+                    <span style="font-size:0.9rem; color: var(--text-light);">Energy changes form.</span>
+                </div>
+            </div>
+            <div class="card" style="display:flex; align-items:center; gap:15px;">
+                <div style="background:#fee2e2; padding:10px; border-radius:50%;">🔥</div>
+                <div>
+                    <strong>Key Standard</strong><br>
+                    <span style="font-size:0.9rem; color: var(--text-light);">Energy is not destroyed.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: MODEL -->
+    <div id="step-2" class="step-content">
+        <div class="grid-2">
+            <div class="diagram-box">
+                <!-- Lamp SVG -->
+                <svg viewBox="0 0 400 300">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" /></marker>
+                    </defs>
+                    <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
+                    <path d="M10 260 Q 50 260, 150 250" stroke="#334155" strokeWidth="3" fill="none" />
+                    <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" />
+                    <path d="M130 250 L170 250 L160 200 L140 200 Z" fill="#1e3a8a" />
+                    <rect x="145" y="100" width="10" height="100" fill="#1e3a8a" />
+                    <path d="M110 100 L190 100 L210 150 L90 150 Z" fill="#fbbf24" opacity="0.8" />
+                    <circle cx="150" cy="130" r="15" fill="#fef08a" />
+                    <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                    <text x="35" y="230" fill="#dc2626" font-size="12" font-weight="bold">Electrical</text>
+                    <path d="M170 110 L220 90" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                    <path d="M180 130 L230 140" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                    <text x="235" y="100" fill="#dc2626" font-size="12" font-weight="bold">Light & Heat</text>
+                </svg>
+                <p class="text-center" style="font-size:0.8rem; color:var(--text-light); margin-top:5px;">Figure 1: Desk Lamp</p>
+            </div>
+
+            <div>
+                <div class="card" style="border-left: 4px solid var(--primary);">
+                    <p class="highlight-blue">Teacher asks:</p>
+                    <p style="font-style: italic; color: var(--text-light);">"Nina, explain to me step by step how the energy changes in the desk lamp."</p>
+                    <button class="btn btn-listen" onclick="speak('Nina, explain to me step by step how the energy changes in the desk lamp.')">🔊 Listen</button>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #d97706; background: #fffbeb;">
+                    <p class="highlight-yellow">Nina answers:</p>
+                    <p style="font-size:0.95rem;">"First, <span class="highlight-red">electrical energy</span> comes from the outlet... It changes into <span class="highlight-yellow">radiant energy</span> (light) and <span class="highlight-red">thermal energy</span> (heat)."</p>
+                    <button class="btn btn-listen" onclick="speak('I can explain. The lamp needs energy to work. First, electrical energy comes from the outlet and travels through the cord. When the electricity reaches the lightbulb, it transforms. It changes into radiant energy, which is light, so we can read. It also changes into thermal energy, because the lightbulb gets hot.')">🔊 Listen to Nina</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: STUDENT TURN -->
+    <div id="step-3" class="step-content">
+        <div class="card" style="background:#eff6ff; border-color:#bfdbfe; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+                <strong class="highlight-blue">Your Task</strong>
+                <div style="font-size:0.9rem;">Explain how energy transforms in the toaster.</div>
+            </div>
+            <button class="btn btn-listen" onclick="speak('Now it’s your turn. Look at the picture of the toaster. Explain to me step by step how the energy transforms in the toaster. Tell me what form it starts as, and what forms it turns into.')">🔊 Listen to Instructions</button>
+        </div>
+
+        <div class="grid-2">
+            <div>
+                <div class="diagram-box">
+                    <!-- Toaster SVG -->
+                    <svg viewBox="0 0 400 300">
+                        <defs><marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#dc2626" /></marker></defs>
+                        <rect x="50" y="250" width="300" height="20" fill="#94a3b8" />
+                        <path d="M10 260 Q 50 260, 120 250" stroke="#334155" strokeWidth="3" fill="none" />
+                        <rect x="0" y="250" width="20" height="20" fill="#cbd5e1" rx="2" />
+                        <rect x="120" y="150" width="160" height="100" rx="10" fill="#94a3b8" stroke="#475569" strokeWidth="2" />
+                        <rect x="140" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+                        <rect x="180" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+                        <rect x="220" y="150" width="20" height="80" fill="#cbd5e1" opacity="0.5" />
+                        <path d="M130 160 L135 240 M150 160 L155 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
+                        <path d="M250 160 L255 240 M265 160 L270 240" stroke="#ef4444" strokeWidth="2" opacity="0.8" />
+                        <path d="M150 110 L210 110 L205 150 L155 150 Z" fill="#d97706" stroke="#b45309" strokeWidth="2" />
+                        <path d="M30 240 L80 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+                        <text x="35" y="230" fill="#dc2626" font-size="12" font-weight="bold">Electrical</text>
+                        <path d="M290 180 L340 160" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+                        <text x="350" y="160" fill="#dc2626" font-size="18" font-weight="bold">?</text>
+                        <path d="M290 220 L340 240" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrowhead2)" />
+                        <text x="350" y="250" fill="#dc2626" font-size="18" font-weight="bold">?</text>
+                    </svg>
+                </div>
+                <div class="card" style="margin-top:10px; background:#f1f5f9;">
+                    <strong>Guiding Questions:</strong>
+                    <ul style="margin:5px 0 0 20px; font-size:0.9rem;">
+                        <li>What energy goes IN?</li>
+                        <li>How does it change form?</li>
+                        <li>What energy comes OUT?</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div>
+                <label style="font-size:0.9rem; font-weight:bold;">1. What starts the toaster?</label>
+                <input type="text" placeholder="e.g. Electrical energy...">
+                
+                <br><br>
+
+                <label style="font-size:0.9rem; font-weight:bold;">2. What forms does it turn into?</label>
+                <textarea rows="3" placeholder="It changes into..."></textarea>
+
+                <div class="recording-area">
+                    <div style="font-size:0.8rem; font-weight:bold; color:var(--text-light); text-transform:uppercase; margin-bottom:5px;">Practice Speaking</div>
+                    <div class="rec-box">
+                        <button class="rec-btn" id="record-btn" onclick="toggleRecord()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </button>
+                        <div>
+                            <div class="rec-status" id="rec-status">READY TO RECORD</div>
+                            <div class="rec-timer" id="rec-timer">0:00</div>
+                        </div>
                     </div>
-                    <h1 className="text-xl font-bold tracking-tight opacity-90">
-                    {step > 0 ? steps[step].title : "ACCESS for ELLs"}
-                    </h1>
                 </div>
-                <div className="text-sm opacity-75">
-                    Page {step + 1} of {steps.length}
-                </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="flex-grow p-6 md:p-10 overflow-y-auto">
-                {steps[step].render()}
-                </div>
-
-                {/* Footer Navigation */}
-                {step > 0 && (
-                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between">
-                    <Button 
-                    onClick={() => setStep(s => Math.max(0, s - 1))}
-                    variant="secondary"
-                    disabled={step === 0}
-                    >
-                    <ChevronLeft size={20} /> Back
-                    </Button>
-                    
-                    {step < steps.length - 1 && (
-                    <Button onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))}>
-                        Next <ChevronRight size={20} />
-                    </Button>
-                    )}
-                </div>
-                )}
             </div>
-            </div>
-        );
-        };
+        </div>
+    </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    <!-- STEP 4: DONE -->
+    <div id="step-4" class="step-content">
+        <div class="flex-col" style="padding-top:40px;">
+            <div style="background:#dcfce7; color:#16a34a; padding:20px; border-radius:50%; margin-bottom:20px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h1>Great Job!</h1>
+            <p class="text-center" style="max-width:400px; color:var(--text-light);">
+                You have explained how electrical energy transforms into thermal and radiant energy. Remember, energy is never destroyed, it just changes form!
+            </p>
+            <br>
+            <button class="btn btn-secondary" onclick="goToStep(0)">Start Over</button>
+        </div>
+    </div>
+
+    <footer id="footer-nav">
+        <button class="btn btn-secondary" id="btn-back" onclick="changeStep(-1)" disabled>&larr; Back</button>
+        <button class="btn btn-primary" id="btn-next" onclick="changeStep(1)">Next &rarr;</button>
+    </footer>
+</div>
+
+<script>
+    // --- VANILLA JAVASCRIPT LOGIC ---
+    let currentStep = 0;
+    const totalSteps = 5; // 0 to 4
+    const titles = ["Energy Task", "The Classroom", "The Model", "Your Turn", "Complete"];
+
+    function goToStep(stepIndex) {
+        currentStep = stepIndex;
+        updateUI();
+    }
+
+    function changeStep(delta) {
+        const newStep = currentStep + delta;
+        if (newStep >= 0 && newStep < totalSteps) {
+            currentStep = newStep;
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        // 1. Hide all steps
+        document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+        
+        // 2. Show current step
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+
+        // 3. Update Header
+        document.getElementById('header-text').innerText = titles[currentStep];
+        document.getElementById('page-num').innerText = currentStep + 1;
+        document.getElementById('step-badge-icon').innerText = currentStep === 0 ? '⚡' : currentStep;
+
+        // 4. Update Footer Buttons
+        const backBtn = document.getElementById('btn-back');
+        const nextBtn = document.getElementById('btn-next');
+        const footer = document.getElementById('footer-nav');
+
+        if (currentStep === 0 || currentStep === 4) {
+            footer.style.display = 'none'; // Hide nav on start/end screens
+        } else {
+            footer.style.display = 'flex';
+            backBtn.disabled = (currentStep <= 1); // Disable back on first content page
+            
+            // Logic to disable Next on final page if needed, but we loop to end screen
+            if (currentStep === 3) {
+                nextBtn.innerHTML = 'Finish &rarr;';
+            } else {
+                nextBtn.innerHTML = 'Next &rarr;';
+            }
+        }
+    }
+
+    // --- Audio Logic ---
+    let isSpeaking = false;
+    function speak(text) {
+        window.speechSynthesis.cancel(); // Stop previous
+        if (isSpeaking) {
+            isSpeaking = false;
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        // Try to get a female voice
+        const voices = window.speechSynthesis.getVoices();
+        const voice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English'));
+        if (voice) utterance.voice = voice;
+        utterance.rate = 0.9;
+        
+        utterance.onend = () => { isSpeaking = false; };
+        isSpeaking = true;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // --- Recording Timer Logic ---
+    let isRecording = false;
+    let timerInterval;
+    let seconds = 0;
+
+    function toggleRecord() {
+        const btn = document.getElementById('record-btn');
+        const status = document.getElementById('rec-status');
+        
+        if (!isRecording) {
+            // Start
+            isRecording = true;
+            btn.classList.add('recording');
+            // Change icon to square (stop)
+            btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"></rect></svg>';
+            status.innerText = "RECORDING...";
+            status.style.color = "#ef4444";
+            
+            timerInterval = setInterval(() => {
+                seconds++;
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                document.getElementById('rec-timer').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+
+        } else {
+            // Stop
+            isRecording = false;
+            clearInterval(timerInterval);
+            seconds = 0;
+            document.getElementById('rec-timer').innerText = "0:00";
+            
+            btn.classList.remove('recording');
+            // Change icon back to mic
+            btn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+            status.innerText = "READY TO RECORD";
+            status.style.color = "#94a3b8";
+        }
+    }
+
+    // Initialize
+    updateUI();
+
+</script>
 </body>
 </html>
